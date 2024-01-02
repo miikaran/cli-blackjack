@@ -40,6 +40,7 @@ def menu():
 def peli(valittu_pelimuoto):
     peli_tiedot['pelimuoto'] = valittu_pelimuoto
     pelaajien_valmistus(valittu_pelimuoto)
+    peli_tiedot['vuoro'] = list(pelaajien_tiedot.keys())[0]
     print('\n[bold light_cyan1]Aloitetaan kierros![/bold light_cyan1]')
     aseta_panos()
     jaa_kasi(valittu_pelimuoto)
@@ -47,9 +48,31 @@ def peli(valittu_pelimuoto):
         while(True):
             print(f'\nPelaajan käsi: {pelaajien_tiedot['Pelaaja']['käsi']}')
             print(f'Jakajan käsi: {pelaajien_tiedot["jakaja"]['käsi'][0]}, ??????????? ')
-            print('\n Haluatko ')
+            print(f'\n{peli_tiedot['vuoro']} - Mitä haluat tehdä?')
+            print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
+            vastaus = int(input('=> '))
+            match vastaus:
+                case 1:
+                    ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
+                #case 2:
+                    #Jako
+                #case 3:
+                    #Tuplaus
+                #case 4:
+                    #Jää
+                #case 5:
+                    #Vakuutus
+                #case 6:
+                    #Antautuminen
+    '''else:
+        counter = 0
+        while(counter < 5):
+            print(peli_tiedot['vuoro'])
+            peli_vuorot()
+            counter += 1'''
+            
         
-        
+
 def pelaajien_valmistus(valittu_pelimuoto):
     if(valittu_pelimuoto == 'yksin'):
         pelaajien_tiedot['Pelaaja'], pelaajien_tiedot['jakaja'] = {}, {}
@@ -98,6 +121,7 @@ def generoi_korttipakka(pelikortit):
             }
             korttipakka.append(kortti) 
     korttipakka = sekoita_korttipakka(korttipakka)
+    peli_tiedot['korttipakka'] = korttipakka
     return korttipakka
 
 
@@ -140,6 +164,21 @@ def aseta_panos():
         elif(pelaaja == 'tietokone'):
             tietokone(pelaajien_tiedot[pelaaja]['saldo'])
 
+def peli_vuorot():
+    pelaajat = list(pelaajien_tiedot.keys())
+    vuoro = pelaajat.index(peli_tiedot['vuoro'])
+    seuraava = vuoro + 1
+    if(seuraava > len(pelaajat)-1):
+        peli_tiedot['vuoro'] = pelaajat[0]
+    else:
+        peli_tiedot['vuoro'] = pelaajat[seuraava]
+
+
+def hae_satunnainen_kortti(korttipakka):
+    kortti_indeksi = random.randint(0, len(korttipakka)-1)
+    kortti = korttipakka[kortti_indeksi]
+    return kortti
+
 
 def jaa_kasi(valittu_pelimuoto):
     korttipakka = generoi_korttipakka(pelikortit)
@@ -147,16 +186,28 @@ def jaa_kasi(valittu_pelimuoto):
         käsi = []
         for i in range(2):
             while(True):
-                kortti_indeksi = random.randint(0, len(korttipakka))
-                kortti = korttipakka[kortti_indeksi]
+                kortti = hae_satunnainen_kortti(korttipakka)
                 if(kortti not in käsi):
                     käsi.append(kortti)
                     korttipakka.remove(kortti)
-                    #korttipakka.remove(kortti)
                     break
                 else:
                     continue
         pelaajien_tiedot[pelaaja]['käsi'] = käsi
+
+
+def ota_kortti(vuoro, korttipakka):
+    if(len(pelaajien_tiedot[vuoro]['käsi']) > 4):
+        return print('\n[bold red]Voit ottaa enintään viisi (5) korttia per käsi.[/bold red]')
+    kortti = hae_satunnainen_kortti(korttipakka)
+    pelaajien_tiedot[vuoro]['käsi'].append(kortti)
+    peli_tiedot['korttipakka'].remove(kortti)
+    return kortti
+        
+    
+
+
+
    
 
 def tietokone(saldo):
