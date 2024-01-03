@@ -5,7 +5,6 @@ pelikortit = {'maat': ['♠', '♥', '♦', '♣'], 'arvot': [2, 3, 4, 5, 6, 7, 
 peli_tiedot = {}
 pelaajien_tiedot = {}
 
-
 def aloita_peli():
     menu()
 
@@ -46,19 +45,11 @@ def peli(valittu_pelimuoto):
     if(valittu_pelimuoto == 'yksin'):
         while(True):
             nayta_tiedot()
-            tarkistus = tarkista_voitto()
-            match tarkistus[0]:
-                case 'Voitto':
-                    print(f'{tarkistus[1]} voitti kierroksen!')
-                    lisaa_voitto(tarkistus[1])
-                    poista_panos(tarkistus[1])
-                    peli('yksin')   
-                case 'Häviö':
-                    print(f'\n[bold red]{tarkistus[1]} - hävisit kierroksen![/bold red]')
-                    poista_panos(tarkistus[1])
-                    peli('yksin') 
-                case 'Jatkuu':
-                    continue      
+            tarkistus = tarkista_voitto(False)
+            if(tarkistus[2] == 'blackjack' or tarkistus[2] == 'bust'):
+                lisaa_voitto(tarkistus[1])
+                poista_panos(tarkistus[1])
+                peli('yksin') 
             print(f'\n{peli_tiedot['vuoro']} - Mitä haluat tehdä?')
             print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
             vastaus = int(input('=> '))
@@ -69,8 +60,8 @@ def peli(valittu_pelimuoto):
                     #Jako
                 #case 3:
                     #Tuplaus
-                #case 4:
-                    #Jää
+                case 4:
+                    jää(valittu_pelimuoto, peli_tiedot['vuoro'])
                 #case 5:
                     #Vakuutus
                 #case 6:
@@ -182,7 +173,7 @@ def nayta_tiedot():
             print(f'\n{pelaaja}n saldo: {pelaajien_tiedot[pelaaja]['saldo']}')
             print(f'{pelaaja}n käsi: {pelaajien_tiedot[pelaaja]['kasi']}')
         else:
-            print(f'\nJakajan käsi: {pelaajien_tiedot["jakaja"]['kasi'][0]}, ??????????? ')
+            print(f'\nJakajan käsi: {pelaajien_tiedot["jakaja"]['kasi']}')
 
 
 def peli_vuorot():
@@ -218,23 +209,51 @@ def jaa_kasi():
 
 
 def ota_kortti(vuoro, korttipakka):
-    if(len(pelaajien_tiedot[vuoro]['kasi']) > 4):
+    if(len(pelaajien_tiedot[vuoro]['kasi']) > 4 and vuoro is not 'jakaja'):
         return print('\n[bold red]Voit ottaa enintään viisi (5) korttia per käsi.[/bold red]')
     kortti = hae_satunnainen_kortti(korttipakka)
     pelaajien_tiedot[vuoro]['kasi'].append(kortti)
     peli_tiedot['korttipakka'].remove(kortti)
     return kortti
-        
-    
-def tarkista_voitto():
+
+
+def jää(pelimuoto, pelaaja):
+    if(pelimuoto == 'yksin'):
+        while(True):
+            jakajan_kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot['jakaja']['kasi']])
+            print(jakajan_kaden_arvo)
+            if(jakajan_kaden_arvo > 17):
+                tarkista_voitto(True)
+                break
+            else:    
+                ota_kortti('jakaja', peli_tiedot['korttipakka'])
+                continue
+            
+
+
+def tarkista_voitto(jää):
+    pelaajat = []
+    arvot = []
     for pelaaja in pelaajien_tiedot:
+        pelaajat.append(pelaaja)
         kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot[pelaaja]['kasi']])
-        if(kaden_arvo > 21):
-            return 'Häviö', pelaaja
+        arvot.append(kaden_arvo)
+        if(kaden_arvo > 21):   
+            return print(f'{pelaaja} hävisi kierroksen'), pelaaja, 'bust'
         elif(kaden_arvo == 21):
-            return 'Voitto', pelaaja
-        else:
+            return print(f'{pelaaja} voitti kierroksen'), pelaaja, 'blackjack'
+        elif(not jää):
             return 'Jatkuu'
+    if(jää):
+        arvot_voitosta = []
+        for arvo in arvot:
+            arvot_voitosta.append(21 - arvo)
+        lahin = min(arvot_voitosta)
+        return print(f'{pelaajat[arvot_voitosta.index(lahin)]} voitti kierroksen'), pelaajat[arvot_voitosta.index(lahin)]
+
+
+
+            
 
 
 def lisaa_voitto(pelaaja):
