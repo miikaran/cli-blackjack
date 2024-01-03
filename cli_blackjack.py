@@ -2,7 +2,10 @@ import random
 from rich import print
 
 
-pelikortit = {'maat': ['♠', '♥', '♦', '♣'], 'arvot': [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]}
+pelikortit = {
+    'maat': ['♠', '♥', '♦', '♣'],
+    'arvot': [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+}
 peli_tiedot = {}
 pelaajien_tiedot = {}
 
@@ -47,8 +50,8 @@ def peli(valittu_pelimuoto):
     if(valittu_pelimuoto == 'yksin'):
         while(True):
             nayta_tiedot()
-            automaattinen_tarkistus = tarkista_voitto(False)[1] == 'bust' or tarkista_voitto(False)[1] == 'blackjack'
-            if(automaattinen_tarkistus):
+            automaattinen_voitto = tarkista_voitto(False)[1] == 'bust' or tarkista_voitto(False)[1] == 'blackjack'
+            if(automaattinen_voitto):
                 peli('yksin')
             print(f'\n{peli_tiedot['vuoro']} - Mitä haluat tehdä?')
             print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
@@ -58,8 +61,8 @@ def peli(valittu_pelimuoto):
                     ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
                 #case 2:
                     #Jako
-                #case 3:
-                    #Tuplaus
+                case 3:
+                    tuplaa(peli_tiedot['vuoro'])
                 case 4:
                     jää(valittu_pelimuoto, peli_tiedot['vuoro'])
                     peli('yksin')
@@ -171,7 +174,8 @@ def nayta_tiedot():
     print('\nPelaajien tiedot:')
     for pelaaja in pelaajien_tiedot:
         if(pelaaja is not 'jakaja'):
-            print(f'\n{pelaaja}n saldo: {pelaajien_tiedot[pelaaja]['saldo']}$')
+            print(f'\n{pelaaja}n saldo: {pelaajien_tiedot[pelaaja]['saldo'] + pelaajien_tiedot[pelaaja]['panos']}$')
+            print(f'{pelaaja}n panos: {pelaajien_tiedot[pelaaja]['panos']}$')
             print(f'{pelaaja}n käsi: {pelaajien_tiedot[pelaaja]['kasi']}')
         else:
             print(f'\nJakajan käsi: {pelaajien_tiedot["jakaja"]['kasi']}')
@@ -228,7 +232,18 @@ def jää(pelimuoto, pelaaja):
             else:    
                 ota_kortti('jakaja', peli_tiedot['korttipakka'])
                 continue
-            
+
+
+def tuplaa(pelaaja):
+    pelaajan_panos = pelaajien_tiedot[pelaaja]['panos']
+    pelaajan_saldo = pelaajien_tiedot[pelaaja]['saldo'] + pelaajan_panos
+    print(pelaajan_panos, pelaajan_saldo)
+    if(pelaajan_saldo >= pelaajan_panos*2):
+        pelaajien_tiedot[pelaaja]['panos'] *= 2
+        tarkista_voitto(True)
+        peli('yksin')
+    else:
+        print('Sinulla ei riitä saldo tuplaamiseen')        
 
 def tarkista_voitto(jää):
     pelaajat = []
@@ -264,7 +279,7 @@ def tarkista_voitto(jää):
         lahin = min(arvot_voitosta)
         voittaja = pelaajat[arvot_voitosta.index(lahin)]
         if(pelimuoto == 'yksin' and voittaja is 'jakaja'):
-            print(f'[bold red]\nHävisit kierroksen[/bold green]')
+            print(f'[bold red]\nHävisit kierroksen[/bold red]')
             poista_panos('Pelaaja')
             return voittaja
         else:
@@ -281,7 +296,10 @@ def tarkista_voitto(jää):
 
 def lisaa_voitto(pelaaja):
     if(pelaaja is not 'jakaja'):
-        pelaajien_tiedot[pelaaja]['saldo'] += pelaajien_tiedot[pelaaja]['panos'] * 2
+        try:
+            pelaajien_tiedot[pelaaja]['saldo'] += pelaajien_tiedot[pelaaja]['panos'] * 2
+        except:
+            pass
 
         
 def poista_panos(pelaaja):
