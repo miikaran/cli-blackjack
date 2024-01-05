@@ -324,7 +324,6 @@ def lisaa_voitto(pelaaja, tasapeli):
             except:
                 pass
     else:
-        print(pelaaja)
         try:
             pelaajien_tiedot[pelaaja]['saldo'] += pelaajien_tiedot[pelaaja].get('panos', 0) * 2
         except:
