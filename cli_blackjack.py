@@ -179,6 +179,7 @@ def nayta_tiedot():
 
 
 def peli_vuorot():
+    print(peli_tiedot['vuoro'])
     pelaajat = list(pelaajien_tiedot.keys())
     vuoro_index = pelaajat.index(peli_tiedot['vuoro'])
     seuraava = vuoro_index+1
@@ -251,61 +252,91 @@ def tuplaa(pelaaja):
     if pelaajan_saldo >= pelaajan_panos*2:
         pelaajan_tiedot['panos'] *= 2
         ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
-        jää(peli_tiedot['pelimuoto'], pelaaja)
     else:
         print('Sinulla ei riitä saldo tuplaamiseen')        
 
 
 def tarkista_voitto(muu_voitto):
-    pelaajat = []
-    arvot = []
-    pelimuoto = peli_tiedot['pelimuoto']
+    pelaajat_arvot = []
+    pelimuoto = 'kaveri' if peli_tiedot['pelimuoto'] != 'tietokone' and peli_tiedot['pelimuoto'] != 'yksin' else peli_tiedot['pelimuoto']
+    voittaja = ''
+    nayta_tiedot()
 
     for pelaaja in pelaajien_tiedot:
-        pelaajat.append(pelaaja)
         kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot[pelaaja]['kasi']])
-        arvot.append(kaden_arvo)
+        pelaajat_arvot.append({'pelaaja': pelaaja, 'arvo': kaden_arvo})
 
         if pelimuoto == 'yksin':
             if kaden_arvo > 21:
-                voittaja = 'Pelaaja' if pelaaja == 'jakaja' else pelaaja
-                lisaa_voitto(voittaja)
-                poista_panos(voittaja)
+                voittaja = 'Pelaaja' if pelaaja == 'jakaja' else 'jakaja'
+                lisaa_voitto(voittaja, False)
+                poista_panos()
                 return print(f'\n[bold {"red" if voittaja == "jakaja" else "green"}]{"Hävisit" if voittaja == "jakaja" else "Voitit"} kierroksen[/bold {"red" if voittaja == "jakaja" else "green"}]'), voittaja, 'bust'  
             elif kaden_arvo == 21:
                 voittaja = 'jakaja' if pelaaja == 'jakaja' else pelaaja
-                lisaa_voitto(voittaja)
-                poista_panos(voittaja)
+                lisaa_voitto(voittaja, False)
+                poista_panos()
                 return print(f'\n[bold {"red" if voittaja == "jakaja" else "green"}]{"Hävisit" if voittaja == "jakaja" else "Voitit"} kierroksen[/bold {"red" if voittaja == "jakaja" else "green"}]'), voittaja, 'blackjack'
     
     if muu_voitto:
-        arvot_voitosta = [21-arvo for arvo in arvot]
-        lahin = min(arvot_voitosta)
-        voittaja_index = arvot_voitosta.index(lahin)
-        voittaja = pelaajat[voittaja_index]
+        voitto_jarjestys = sorted(pelaajat_arvot, key=lambda x: x['arvo'])
+        saman_arvoiset_kadet = []
 
-        if pelimuoto == 'yksin' and voittaja is 'jakaja':
-            poista_panos('Pelaaja')
-            return print(f'[bold red]\nHävisit kierroksen[/bold red]'), voittaja
-        elif pelimuoto == 'kaveri' and voittaja_index == len(pelaajien_tiedot)-1:
-            lisaa_voitto(voittaja)
-            poista_panos(voittaja)
-            print(f'[bold green]\n{voittaja} voitti kierroksen[/bold green]'), voittaja   
-            peli('kaveri')   
+        for pelaaja in voitto_jarjestys:
+            if pelaaja['arvo'] <= 21:
+                for kasi in voitto_jarjestys:
+                    if pelaaja['arvo'] == kasi['arvo'] and pelaaja['pelaaja'] != kasi['pelaaja']:
+                        if len(saman_arvoiset_kadet) > 1:
+                            saman_arvoiset_kadet = []
+                        saman_arvoiset_kadet.append(kasi)
+                voittaja = pelaaja['pelaaja']
+            else:
+                break
+    
+        if len(saman_arvoiset_kadet) != 0:
+            tasapeli_pelaajat = ''
+            for pelaajat in saman_arvoiset_kadet:
+                tasapeli_pelaajat += pelaajat['pelaaja'] + ' & ' if pelaajat != saman_arvoiset_kadet[len(saman_arvoiset_kadet)-1] else pelaajat['pelaaja']
+
+            print(f'[bold light_cyan1]\n{tasapeli_pelaajat} teillä tuli tasapeli![/bold light_cyan1]'), voittaja
+            lisaa_voitto(saman_arvoiset_kadet, True)
+        elif pelimuoto == 'yksin' and voittaja == 'jakaja':
+            print(f'[bold red]\nHävisit kierroksen[/bold red]'), voittaja
+        elif pelimuoto == 'kaveri' and len(pelaajat_arvot) == len(pelaajien_tiedot):
+            lisaa_voitto(voittaja, False)
+            print(f'[bold green]\n{voittaja} voitti kierroksen[/bold green]'), voittaja    
         else:
-            lisaa_voitto(voittaja)
-            poista_panos(voittaja)
-            return print(f'[bold green]\n{voittaja} voitti kierroksen[/bold green]'), voittaja
+            lisaa_voitto(voittaja, False)
+            print(f'[bold green]\n{voittaja} voitti kierroksen[/bold green]'), voittaja
+        
+        poista_panos()
+        peli(pelimuoto)
+        
 
     return 'Jatkuu'
 
             
-def lisaa_voitto(pelaaja):
-    pelaajien_tiedot[pelaaja]['saldo'] += pelaajien_tiedot[pelaaja].get('panos', 0) * 2
+def lisaa_voitto(pelaaja, tasapeli):
+    if(tasapeli):
+        for p in pelaaja:
+            try:
+                pelaajien_tiedot[p['pelaaja']]['saldo'] += pelaajien_tiedot[p['pelaaja']].get('panos', 0) * 1
+            except:
+                pass
+    else:
+        print(pelaaja)
+        try:
+            pelaajien_tiedot[pelaaja]['saldo'] += pelaajien_tiedot[pelaaja].get('panos', 0) * 2
+        except:
+            pass
 
 
-def poista_panos(pelaaja):
-    pelaajien_tiedot[pelaaja].pop('panos', None)
+def poista_panos():
+    for pelaaja in pelaajien_tiedot:
+        try:
+            pelaajien_tiedot[pelaaja].pop('panos', None)
+        except:
+            pass
 
 
    
