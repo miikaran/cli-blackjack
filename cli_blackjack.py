@@ -7,7 +7,6 @@ peli_tiedot = {}
 pelaajien_tiedot = {}
 
 
-
 def aloita_peli():
     menu()
 
@@ -21,18 +20,18 @@ def menu():
         try:
             valitse_pelimuoto = int(input('=> '))
             break      
-        except:
+        except ValueError:
             print('Virheellinen valinta')
             menu()
 
     match valitse_pelimuoto:
-        case 1:
+        case 1: # Yksinpeli jakajaa vastaan.
             pelaajien_valmistus('yksin')
             peli('yksin')
-        case 2:
+        case 2: # Moninpeli tietokonetta vastaan.
             pelaajien_valmistus('tietokone')
             peli('tietokone')
-        case 3:
+        case 3: # Moninpeli kaverien kanssa.
             pelaajien_valmistus('kaveri')
             peli('kaveri')          
         case 4:
@@ -42,16 +41,19 @@ def menu():
 
 
 def peli(valittu_pelimuoto):
+    # Tallennetaan valittu pelimuoto ja ensimmäisen pelaajan vuoro.
     peli_tiedot['pelimuoto'] = valittu_pelimuoto
     peli_tiedot['vuoro'] = list(pelaajien_tiedot.keys())[0]
 
+    # Aloitetaan uusi kierros, asetetaan panos ja jaetaan kädet pelaajille.
     print('\n[bold light_cyan1]Aloitetaan uusi kierros![/bold light_cyan1]')
     aseta_panos()
     jaa_kasi()
 
-    while True:     
+    while True:   
         nayta_tiedot()
-        
+
+        # Tarkista voitto yksinpelissä jokaisen toiminnon jälkeen.
         if valittu_pelimuoto == 'yksin':
             automaattinen_voitto = tarkista_voitto(False)          
             if automaattinen_voitto != 'Jatkuu':
@@ -62,6 +64,7 @@ def peli(valittu_pelimuoto):
         
         vastaus = int(input('=> '))
 
+        # Valitaan pelaajan kierroksen toiminto.
         match vastaus:
             case 1:
                 ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
@@ -78,6 +81,7 @@ def peli(valittu_pelimuoto):
     
                   
 def pelaajien_valmistus(valittu_pelimuoto):
+    # Alustetaan pelaajien tiedot pelimuodon mukaan.
     match valittu_pelimuoto:
         case 'yksin':
             pelaajien_tiedot['Pelaaja'], pelaajien_tiedot['jakaja'] = {}, {}
@@ -87,10 +91,11 @@ def pelaajien_valmistus(valittu_pelimuoto):
             print('\n[bold red]Lisätään pelaajia peliin.[/bold red]')
             pelaaja_jarjestys = 1 
 
-            while True:   
+            while True: # Lisätään pelaajia moninpelissä.
                 print('[cyan3]Kirjoita S tallentaaksesi lisäyksesi[/cyan3]\n')
                 nimi = input(f'\n{pelaaja_jarjestys}. pelaajan nimi: ')
 
+                # Tallennetaan lisätyt pelaajat "S" kirjaimella.
                 if nimi.lower() == 's':
                     if len(pelaajien_tiedot) > 0:
                         print('Tallennetaanko pelaajat?')
@@ -99,15 +104,15 @@ def pelaajien_valmistus(valittu_pelimuoto):
                         varmistus = input('Kylla/Ei? => ').lower()
                         if varmistus == 'kylla':
                             break
-                        elif varmistus == 'ei':
-                            continue
                         else:
                             continue
                     break
+
                 if nimi == None or nimi == '':
                     print('[bold red]Älä jätä pelaajan nimeä tyhjäksi[/bold red]\n')
                     continue
                 else:
+                    # Lisätään pelaaja pelaajien_tiedot objektiin.
                     pelaajien_tiedot[nimi] = {'jarjestys': pelaaja_jarjestys}
                     pelaaja_jarjestys += 1
         case _:
@@ -138,6 +143,7 @@ def sekoita_korttipakka(korttipakka):
 
 
 def aseta_panos():
+    #Asetetaan pelaajien panokset
     for pelaaja in pelaajien_tiedot:
         tiedot = pelaajien_tiedot[pelaaja]
         if pelaaja != 'tietokone' and pelaaja != 'jakaja':
@@ -158,9 +164,10 @@ def aseta_panos():
         elif pelaaja == 'tietokone':
             tietokone(tiedot['saldo'])
 
-def nayta_tiedot():
-    print('\nPelaajien tiedot:')
 
+def nayta_tiedot():
+    print('\nPelaajien tiedot:') 
+    # Näytetään pelaajien tiedot (panos, saldo, kasi, jne).
     for pelaaja in pelaajien_tiedot:
         tiedot = pelaajien_tiedot[pelaaja]
         if pelaaja != 'jakaja':
@@ -172,18 +179,20 @@ def nayta_tiedot():
             except KeyError:
                 pass
         else:
-            try:
+            try: # Näytetään jakajan käsi erikseen, mikäli pelataan yksinpeliä.
                 print(f'\nJakajan käsi: {tiedot['kasi']}')
             except KeyError:
                 pass
 
 
 def peli_vuorot():
+    # Tämä funktio hallitsee pelin vuorot moninpelissä.
     print(peli_tiedot['vuoro'])
     pelaajat = list(pelaajien_tiedot.keys())
     vuoro_index = pelaajat.index(peli_tiedot['vuoro'])
     seuraava = vuoro_index+1
 
+    # Kun viimeinen pelaaja on tehnyt tehnyt valinnan, niin tarkistetaan voitto.
     if seuraava > len(pelaajat)-1:
         tarkista_voitto(True)
         peli_tiedot['vuoro'] = pelaajat[0]
@@ -203,7 +212,7 @@ def hae_satunnainen_kortti(korttipakka):
 def jaa_kasi():
     korttipakka = generoi_korttipakka(pelikortit)
     peli_tiedot['kaytetyt_kortit'] = []
-
+    # Jaetaan pelikäsi jokaiselle pelaajalle.
     for pelaaja in pelaajien_tiedot:
         pelaajan_tiedot = pelaajien_tiedot[pelaaja]
         kasi = [hae_satunnainen_kortti(korttipakka) for _ in range(2)]
@@ -213,7 +222,6 @@ def jaa_kasi():
 def ota_kortti(vuoro, korttipakka):
     max_kortit = 4
     pelaaja_tiedot = pelaajien_tiedot[vuoro]
-
     if len(pelaaja_tiedot['kasi']) > max_kortit and vuoro != 'jakaja':
         print('\n[bold red]Voit ottaa enintään viisi (5) korttia per käsi.[/bold red]')
         return
@@ -223,6 +231,7 @@ def ota_kortti(vuoro, korttipakka):
     peli_tiedot['korttipakka'].remove(kortti)
 
     pelaajan_kaden_arvo = sum([kasi['arvo'] for kasi in pelaaja_tiedot['kasi']])
+    # Jos moninpelissä kortin ottamisen jälkeen pelaajan käden arvo on yli 21 hän jää automaattisesti.
     if peli_tiedot['pelimuoto'] == 'kaveri' and pelaajan_kaden_arvo >= 21:
         jää(peli_tiedot['pelimuoto'], peli_tiedot['vuoro'])
 
@@ -231,9 +240,10 @@ def ota_kortti(vuoro, korttipakka):
 
 def jää(pelimuoto, pelaaja):
     if pelimuoto == 'yksin':
-        while True:
+        while True: # Yksinpelissä jakaja nostaa sääntöjen mukaisesti kortteja siihen asti, kunnes käden arvo on 17 tai yli.
             jakajan_kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot['jakaja']['kasi']])
             if jakajan_kaden_arvo > 17:
+                # Kun jakajan kaden arvo on yli 17 tarkistetaan voitto ja aloitetaan uusi kierros
                 tarkista_voitto(True)
                 peli('yksin')
                 break
@@ -241,6 +251,7 @@ def jää(pelimuoto, pelaaja):
                 ota_kortti('jakaja', peli_tiedot['korttipakka'])
                 continue
     else:
+        # Jos pelimuoto ei ole yksinpeli, niin voitto tarkistetaan viimeisen pelaajan jälkeen.
         peli_vuorot()
 
 
@@ -248,15 +259,21 @@ def tuplaa(pelaaja):
     pelaajan_tiedot = pelaajien_tiedot[pelaaja]
     pelaajan_panos = pelaajien_tiedot[pelaaja]['panos']
     pelaajan_saldo = pelaajien_tiedot[pelaaja]['saldo'] + pelaajan_panos
-  
+    # Jos pelaaja tuplaa, niin hän ottaa automaattisesti yhden kortin, jonka jälkeen vuoro siirtyy eteenpäin.
     if pelaajan_saldo >= pelaajan_panos*2:
         pelaajan_tiedot['panos'] *= 2
         ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
+        if peli_tiedot['pelimuoto'] == 'yksin':
+            jää('yksin', peli_tiedot['vuoro'])
     else:
         print('Sinulla ei riitä saldo tuplaamiseen')        
 
 
 def tarkista_voitto(muu_voitto):
+    '''
+    Tätä funktiota käytetään voiton tarkistukseen kaikissa pelimuodoissa.
+    Yksinpelin automaattisen voiton tarkistamiseen on funktion sisällä luotu omat ehtolausekkeet. 
+    '''
     pelaajat_arvot = []
     pelimuoto = 'kaveri' if peli_tiedot['pelimuoto'] != 'tietokone' and peli_tiedot['pelimuoto'] != 'yksin' else peli_tiedot['pelimuoto']
     voittaja = ''
@@ -281,7 +298,7 @@ def tarkista_voitto(muu_voitto):
     if muu_voitto:
         voitto_jarjestys = sorted(pelaajat_arvot, key=lambda x: x['arvo'])
         saman_arvoiset_kadet = []
-
+        # Määritetään voittaja
         for pelaaja in voitto_jarjestys:
             if pelaaja['arvo'] <= 21:
                 for kasi in voitto_jarjestys:
@@ -293,13 +310,14 @@ def tarkista_voitto(muu_voitto):
             else:
                 break
     
+        # Jos pelaajilla on samanarvoiset kädet, niin tulee tasapeli.
         if len(saman_arvoiset_kadet) != 0:
             tasapeli_pelaajat = ''
             for pelaajat in saman_arvoiset_kadet:
                 tasapeli_pelaajat += pelaajat['pelaaja'] + ' & ' if pelaajat != saman_arvoiset_kadet[len(saman_arvoiset_kadet)-1] else pelaajat['pelaaja']
 
             print(f'[bold light_cyan1]\n{tasapeli_pelaajat} teillä tuli tasapeli![/bold light_cyan1]'), voittaja
-            lisaa_voitto(saman_arvoiset_kadet, True)
+            lisaa_voitto(saman_arvoiset_kadet, True)  
         elif pelimuoto == 'yksin' and voittaja == 'jakaja':
             print(f'[bold red]\nHävisit kierroksen[/bold red]'), voittaja
         elif pelimuoto == 'kaveri' and len(pelaajat_arvot) == len(pelaajien_tiedot):
@@ -317,6 +335,7 @@ def tarkista_voitto(muu_voitto):
 
             
 def lisaa_voitto(pelaaja, tasapeli):
+    # Voiton lisäykset voittajille.
     if(tasapeli):
         for p in pelaaja:
             try:
@@ -331,6 +350,7 @@ def lisaa_voitto(pelaaja, tasapeli):
 
 
 def poista_panos():
+    # Panosten poistamisen kierroksen jälkeen.
     for pelaaja in pelaajien_tiedot:
         try:
             pelaajien_tiedot[pelaaja].pop('panos', None)
