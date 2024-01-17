@@ -7,37 +7,26 @@ peli_tiedot = {}
 pelaajien_tiedot = {}
 
 
-def aloita_peli():
-    menu()
-
-
 def menu():
     print('\n[bold red]Tervetuloa pelaamaan komentolinja Blackjackkia! [/bold red]')
     print('[cyan3]Valitse numeroilla pelimuoto, jota haluat pelata.[/cyan3]\n')
     print('1. [bold light_cyan1]Yksin[/bold light_cyan1]\n2. [bold light_cyan1]Tietokonetta vastaan[/bold light_cyan1]\n3. [bold light_cyan1]Kavereita vastaan[/bold light_cyan1]\n4. [bold bright_red]Lopeta peli[/bold bright_red]\n')
 
-    while True:
-        try:
-            valitse_pelimuoto = int(input('=> '))
-            break      
-        except ValueError:
-            print('Virheellinen valinta')
-            menu()
+    valitse_pelimuoto = ota_kayttajan_input()
+    
+    menu_vaihtoehdot = {
+        1: 'yksin',
+        2: 'tietokone',
+        3: 'kaveri',
+        4: quit 
+    }
+    kayttajan_input = menu_vaihtoehdot.get(valitse_pelimuoto, menu)
+    aloita_peli(kayttajan_input)
 
-    match valitse_pelimuoto:
-        case 1: # Yksinpeli jakajaa vastaan.
-            pelaajien_valmistus('yksin')
-            peli('yksin')
-        case 2: # Moninpeli tietokonetta vastaan.
-            pelaajien_valmistus('tietokone')
-            peli('tietokone')
-        case 3: # Moninpeli kaverien kanssa.
-            pelaajien_valmistus('kaveri')
-            peli('kaveri')          
-        case 4:
-            quit()          
-        case _:
-            menu()
+
+def aloita_peli(pelimuoto):
+    pelaajien_valmistus(pelimuoto)
+    peli(pelimuoto)
 
 
 def peli(valittu_pelimuoto):
@@ -56,7 +45,7 @@ def peli(valittu_pelimuoto):
             automaattinen_voitto = tarkista_voitto(False)          
             if automaattinen_voitto != 'Jatkuu':
                 peli('yksin')
-        else:
+        else: # Muuten näytetään vain tiedot jokaisen pelaajan toiminnon jälkeen.
             nayta_tiedot()
 
         # Valitaan pelaajan kierroksen toiminto.
@@ -70,7 +59,7 @@ def peli(valittu_pelimuoto):
 def yksittainen_kasi_handler(pelimuoto, vuoro):
     # Käsitellään yksittäisen käden vaihtoehdot.
     print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädelle?')
-    print_vaihtoehdot()
+    print_kasi_vaihtoehdot()
     vastaus = ota_kayttajan_input()
     kasittele_kayttajan_vaihtoehto(pelimuoto, vastaus, peli_tiedot)
 
@@ -79,17 +68,20 @@ def jaettu_kasi_handler(pelaajien_tiedot, peli_tiedot):
     # Käsitellään jaetun käsien vaihtoehdot.
     for kasi in range(2):
         print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädelle {kasi}?')
-        print_vaihtoehdot()
+        print_kasi_vaihtoehdot()
         vastaus = ota_kayttajan_input()
         kasittele_kayttajan_vaihtoehto(peli_tiedot["vuoro"], vastaus)
 
 
-def print_vaihtoehdot():
+def print_kasi_vaihtoehdot():
     print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
 
 
 def ota_kayttajan_input():
-    return int(input('=> '))
+    try:
+        return int(input('=> '))
+    except ValueError:
+        print('Virheellinen valinta')
 
 
 def kasittele_kayttajan_vaihtoehto(pelimuoto, vastaus, peli_tiedot):
@@ -416,7 +408,7 @@ def poista_panos():
 def tietokone(saldo):
     print(saldo)
 
-aloita_peli()
+menu()
 
 
 
