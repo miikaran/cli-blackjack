@@ -51,13 +51,13 @@ def peli(valittu_pelimuoto):
     jaa_kasi()
 
     while True:   
-        nayta_tiedot()
-
         # Tarkista voitto yksinpelissä jokaisen toiminnon jälkeen.
         if valittu_pelimuoto == 'yksin':
             automaattinen_voitto = tarkista_voitto(False)          
             if automaattinen_voitto != 'Jatkuu':
                 peli('yksin')
+        else:
+            nayta_tiedot()
 
         print(f'\n{peli_tiedot['vuoro']} - Mitä haluat tehdä?')
         print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
@@ -68,8 +68,8 @@ def peli(valittu_pelimuoto):
         match vastaus:
             case 1:
                 ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
-            #case 2:
-                #Jako
+            case 2:
+                jako(peli_tiedot['vuoro'])
             case 3:
                 tuplaa(peli_tiedot['vuoro'])
             case 4:
@@ -172,15 +172,23 @@ def nayta_tiedot():
         tiedot = pelaajien_tiedot[pelaaja]
         if pelaaja != 'jakaja':
             try:
+                print('\n===========================================')
                 pelaajan_saldo = tiedot['saldo'] + tiedot['panos']
-                print(f'\n{pelaaja}n saldo: {pelaajan_saldo}$')
+                print(f'{pelaaja}n saldo: {pelaajan_saldo}$')
                 print(f'{pelaaja}n panos: {tiedot['panos']}$')
                 print(f'{pelaaja}n käsi: {tiedot['kasi']}')
+                try: # Mikäli pelaaja on jakanut kätensä.
+                    print(f'{pelaaja}n toinen käsi: {tiedot['kasi1']}')
+                except:
+                    pass
+                print('============================================')
             except KeyError:
                 pass
         else:
             try: # Näytetään jakajan käsi erikseen, mikäli pelataan yksinpeliä.
-                print(f'\nJakajan käsi: {tiedot['kasi']}')
+                print('\n===========================================')
+                print(f'Jakajan käsi: {tiedot['kasi']}')
+                print('===========================================')
             except KeyError:
                 pass
 
@@ -221,7 +229,8 @@ def jaa_kasi():
 
 def ota_kortti(vuoro, korttipakka):
     max_kortit = 4
-    pelaaja_tiedot = pelaajien_tiedot[vuoro]
+    pelaaja_tiedot = pelaajien_tiedot[vuoro]    
+    # Kortin ottaminen (hit) voi tehdä maksimissaan viiteen korttiin asti.
     if len(pelaaja_tiedot['kasi']) > max_kortit and vuoro != 'jakaja':
         print('\n[bold red]Voit ottaa enintään viisi (5) korttia per käsi.[/bold red]')
         return
@@ -266,8 +275,24 @@ def tuplaa(pelaaja):
         if peli_tiedot['pelimuoto'] == 'yksin':
             jää('yksin', peli_tiedot['vuoro'])
     else:
-        print('Sinulla ei riitä saldo tuplaamiseen')        
+        print('Sinulla ei riitä saldo tuplaamiseen')    
 
+
+def jako(pelaaja):
+    pelaajan_tiedot = pelaajien_tiedot[pelaaja]
+    # Jaetaan pelaajan käsi kahteen erilliseen käteen.
+    if(pelaajan_tiedot['kasi'][0]['arvo'] == pelaajan_tiedot['kasi'][1]['arvo'] and len(pelaajan_tiedot['kasi']) == 2):
+        pelaajan_tiedot['kasi1'] = [pelaajan_tiedot['kasi'][1]]
+        pelaajan_tiedot['kasi'] = [pelaajan_tiedot['kasi'][0]]
+        # Haetaan kummallekkin kädelle uusi kortti.
+        for kasi in range(2):
+            if(kasi == 0):
+                pelaajan_tiedot['kasi'].append(hae_satunnainen_kortti(peli_tiedot['korttipakka']))
+            else:
+                pelaajan_tiedot[f'kasi{kasi}'].append(hae_satunnainen_kortti(peli_tiedot['korttipakka']))
+    else:
+        print('Et pysty jakamaan kädelläsi')
+    
 
 def tarkista_voitto(muu_voitto):
     '''
@@ -282,7 +307,7 @@ def tarkista_voitto(muu_voitto):
     for pelaaja in pelaajien_tiedot:
         kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot[pelaaja]['kasi']])
         pelaajat_arvot.append({'pelaaja': pelaaja, 'arvo': kaden_arvo})
-
+    
         if pelimuoto == 'yksin':
             if kaden_arvo > 21:
                 voittaja = 'Pelaaja' if pelaaja == 'jakaja' else 'jakaja'
