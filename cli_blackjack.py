@@ -15,7 +15,7 @@ def menu():
     print('\n[bold red]Tervetuloa pelaamaan komentolinja Blackjackkia! [/bold red]')
     print('[cyan3]Valitse numeroilla pelimuoto, jota haluat pelata.[/cyan3]\n')
     print('1. [bold light_cyan1]Yksin[/bold light_cyan1]\n2. [bold light_cyan1]Tietokonetta vastaan[/bold light_cyan1]\n3. [bold light_cyan1]Kavereita vastaan[/bold light_cyan1]\n4. [bold bright_red]Lopeta peli[/bold bright_red]\n')
-    
+
     while True:
         try:
             valitse_pelimuoto = int(input('=> '))
@@ -59,26 +59,54 @@ def peli(valittu_pelimuoto):
         else:
             nayta_tiedot()
 
-        print(f'\n{peli_tiedot['vuoro']} - Mitä haluat tehdä?')
-        print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
-        
-        vastaus = int(input('=> '))
-
         # Valitaan pelaajan kierroksen toiminto.
-        match vastaus:
-            case 1:
-                ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
-            case 2:
-                jako(peli_tiedot['vuoro'])
-            case 3:
-                tuplaa(peli_tiedot['vuoro'])
-            case 4:
-                jää(valittu_pelimuoto, peli_tiedot['vuoro'])              
-            #case 5:
-                #Vakuutus
-            #case 6:
-                #Antautuminen
-    
+        # Jos pelaaja on jakanut kätensä, niin pelaajalla on kummallekkin kädelle oma vuoro.
+        if 'kasi1' in pelaajien_tiedot[peli_tiedot['vuoro']].keys():
+            jaettu_kasi_handler(pelaajien_tiedot, peli_tiedot)
+        else:
+            yksittainen_kasi_handler(valittu_pelimuoto, peli_tiedot)
+
+
+def yksittainen_kasi_handler(pelimuoto, vuoro):
+    # Käsitellään yksittäisen käden vaihtoehdot.
+    print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädelle?')
+    print_vaihtoehdot()
+    vastaus = ota_kayttajan_input()
+    kasittele_kayttajan_vaihtoehto(pelimuoto, vastaus, peli_tiedot)
+
+
+def jaettu_kasi_handler(pelaajien_tiedot, peli_tiedot):
+    # Käsitellään jaetun käsien vaihtoehdot.
+    for kasi in range(2):
+        print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädelle {kasi}?')
+        print_vaihtoehdot()
+        vastaus = ota_kayttajan_input()
+        kasittele_kayttajan_vaihtoehto(peli_tiedot["vuoro"], vastaus)
+
+
+def print_vaihtoehdot():
+    print('\n1. Ota kortti\n2. Jako\n3. Tuplaus\n4. Jää\n5. Vakuutus\n6. Antautuminen')
+
+
+def ota_kayttajan_input():
+    return int(input('=> '))
+
+
+def kasittele_kayttajan_vaihtoehto(pelimuoto, vastaus, peli_tiedot):
+    match vastaus:
+        case 1:
+            ota_kortti(peli_tiedot['vuoro'], peli_tiedot['korttipakka'])
+        case 2:
+            jako(peli_tiedot['vuoro'])
+        case 3:
+            tuplaa(peli_tiedot['vuoro'])
+        case 4:
+            jää(pelimuoto, peli_tiedot['vuoro'])              
+        # case 5:
+            # Vakuutus
+        # case 6:
+            # Antautuminen
+
                   
 def pelaajien_valmistus(valittu_pelimuoto):
     # Alustetaan pelaajien tiedot pelimuodon mukaan.
@@ -177,7 +205,7 @@ def nayta_tiedot():
                 print(f'{pelaaja}n saldo: {pelaajan_saldo}$')
                 print(f'{pelaaja}n panos: {tiedot['panos']}$')
                 print(f'{pelaaja}n käsi: {tiedot['kasi']}')
-                try: # Mikäli pelaaja on jakanut kätensä.
+                try: # Mikäli pelaaja on jakanut kätensä, näytä myös toinen käsi.
                     print(f'{pelaaja}n toinen käsi: {tiedot['kasi1']}')
                 except:
                     pass
@@ -248,6 +276,7 @@ def ota_kortti(vuoro, korttipakka):
 
 
 def jää(pelimuoto, pelaaja):
+    #pelaajan_tiedot = pelaajien_tiedot['vuoro']
     if pelimuoto == 'yksin':
         while True: # Yksinpelissä jakaja nostaa sääntöjen mukaisesti kortteja siihen asti, kunnes käden arvo on 17 tai yli.
             jakajan_kaden_arvo = sum([kortti['arvo'] for kortti in pelaajien_tiedot['jakaja']['kasi']])
@@ -255,7 +284,6 @@ def jää(pelimuoto, pelaaja):
                 # Kun jakajan kaden arvo on yli 17 tarkistetaan voitto ja aloitetaan uusi kierros
                 tarkista_voitto(True)
                 peli('yksin')
-                break
             else:    
                 ota_kortti('jakaja', peli_tiedot['korttipakka'])
                 continue
@@ -281,12 +309,12 @@ def tuplaa(pelaaja):
 def jako(pelaaja):
     pelaajan_tiedot = pelaajien_tiedot[pelaaja]
     # Jaetaan pelaajan käsi kahteen erilliseen käteen.
-    if(pelaajan_tiedot['kasi'][0]['arvo'] == pelaajan_tiedot['kasi'][1]['arvo'] and len(pelaajan_tiedot['kasi']) == 2):
+    if pelaajan_tiedot['kasi'][0]['arvo'] == pelaajan_tiedot['kasi'][1]['arvo'] and len(pelaajan_tiedot['kasi']) == 2:
         pelaajan_tiedot['kasi1'] = [pelaajan_tiedot['kasi'][1]]
         pelaajan_tiedot['kasi'] = [pelaajan_tiedot['kasi'][0]]
         # Haetaan kummallekkin kädelle uusi kortti.
         for kasi in range(2):
-            if(kasi == 0):
+            if kasi == 0:
                 pelaajan_tiedot['kasi'].append(hae_satunnainen_kortti(peli_tiedot['korttipakka']))
             else:
                 pelaajan_tiedot[f'kasi{kasi}'].append(hae_satunnainen_kortti(peli_tiedot['korttipakka']))
@@ -361,7 +389,7 @@ def tarkista_voitto(muu_voitto):
             
 def lisaa_voitto(pelaaja, tasapeli):
     # Voiton lisäykset voittajille.
-    if(tasapeli):
+    if tasapeli:
         for p in pelaaja:
             try:
                 pelaajien_tiedot[p['pelaaja']]['saldo'] += pelaajien_tiedot[p['pelaaja']].get('panos', 0) * 1
