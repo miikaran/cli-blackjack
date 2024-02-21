@@ -7,15 +7,24 @@ peli_tiedot = {}
 pelaajien_tiedot = {}
 
 def menu():
+    print()
+    blackjack = [
+        "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LL[/bold magenta]      [bold magenta]A    [/bold magenta]CCCCC  [bold magenta]K   K  [/bold magenta] JJJJJ  [bold magenta]A    [/bold magenta]CCCCC  [bold magenta]K   K[/bold magenta]",
+        "[bold magenta]B   B[/bold magenta]  [bold magenta]LL[/bold magenta]     [bold magenta]A A  [/bold magenta]C       [bold magenta]K  K  [/bold magenta]     J  [bold magenta]A A  [/bold magenta]C       [bold magenta]K  K[/bold magenta]",
+        "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LL[/bold magenta]    [bold magenta]AAAAA[/bold magenta] C       [bold magenta]KK    [/bold magenta]     J [bold magenta]AAAAA[/bold magenta] C       [bold magenta]KK[/bold magenta]",
+        "[bold magenta]B   B[/bold magenta]  [bold magenta]LL[/bold magenta]    [bold magenta]A   A [/bold magenta]C       [bold magenta]K  K  [/bold magenta] J   J [bold magenta]A   A [/bold magenta]C       [bold magenta]K  K[/bold magenta]",
+        "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LLLLL[/bold magenta] [bold magenta]A   A [/bold magenta] CCCCC  [bold magenta]K   K [/bold magenta] JJJJ [bold magenta]A   A [/bold magenta] CCCCC  [bold magenta]K   K[/bold magenta]"
+    ]
+    for line in blackjack:
+        print(line)
     print('\n[bold red]Tervetuloa pelaamaan komentolinja Blackjackkia! [/bold red]')
     print('[cyan3]Valitse numeroilla pelimuoto, jota haluat pelata.[/cyan3]\n')
-    print('1. [bold light_cyan1]Yksin[/bold light_cyan1]\n2. [bold light_cyan1]Tietokonetta vastaan[/bold light_cyan1]\n3. [bold light_cyan1]Kavereita vastaan[/bold light_cyan1]\n4. [bold bright_red]Lopeta peli[/bold bright_red]\n')
+    print('1. [bold light_cyan1]Yksin[/bold light_cyan1]\n2. [bold light_cyan1]Kavereita vastaan[/bold light_cyan1]\n3. [bold bright_red]Lopeta peli[/bold bright_red]\n')
     valitse_pelimuoto = ota_kayttajan_input()
     menu_vaihtoehdot = {
         1: 'yksin',
-        2: 'tietokone',
-        3: 'kaveri',
-        4: 'quit'
+        2: 'kaveri',
+        3: 'quit'
     }
     kayttajan_input = menu_vaihtoehdot.get(valitse_pelimuoto, menu)
     if(kayttajan_input == 'quit'):
@@ -59,7 +68,7 @@ def yksittainen_kasi_handler(pelimuoto, vuoro):
 def jaettu_kasi_handler(pelaajien_tiedot, peli_tiedot):
     # Käsitellään jaetun käsien vaihtoehdot.
     for kasi in range(2):
-        print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädellä?')
+        print(f'\n{peli_tiedot["vuoro"]} - Mitä haluat tehdä kädellä {kasi}?')
         print_kasi_vaihtoehdot()
         vastaus = ota_kayttajan_input()
         kasittele_kayttajan_vaihtoehto(peli_tiedot["vuoro"], vastaus)
