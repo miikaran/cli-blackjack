@@ -1,22 +1,27 @@
 import random
 from rich import print
+from rich.console import Console
 from kortti import tulosta_kortti
+from colorama import init, Back
 
+init(autoreset=True)
 pelikortit = {'maat': ['♠', '♥', '♦', '♣'], 'arvot': [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]}
 peli_tiedot = {}
 pelaajien_tiedot = {}
 
 def menu():
     print()
-    blackjack = [
+    console = Console()
+    blackjack_tulostus = [
         "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LL[/bold magenta]      [bold magenta]A    [/bold magenta]CCCCC  [bold magenta]K   K  [/bold magenta] JJJJJ  [bold magenta]A    [/bold magenta]CCCCC  [bold magenta]K   K[/bold magenta]",
         "[bold magenta]B   B[/bold magenta]  [bold magenta]LL[/bold magenta]     [bold magenta]A A  [/bold magenta]C       [bold magenta]K  K  [/bold magenta]     J  [bold magenta]A A  [/bold magenta]C       [bold magenta]K  K[/bold magenta]",
         "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LL[/bold magenta]    [bold magenta]AAAAA[/bold magenta] C       [bold magenta]KK    [/bold magenta]     J [bold magenta]AAAAA[/bold magenta] C       [bold magenta]KK[/bold magenta]",
         "[bold magenta]B   B[/bold magenta]  [bold magenta]LL[/bold magenta]    [bold magenta]A   A [/bold magenta]C       [bold magenta]K  K  [/bold magenta] J   J [bold magenta]A   A [/bold magenta]C       [bold magenta]K  K[/bold magenta]",
         "[bold magenta]BBBBB[/bold magenta]  [bold magenta]LLLLL[/bold magenta] [bold magenta]A   A [/bold magenta] CCCCC  [bold magenta]K   K [/bold magenta] JJJJ [bold magenta]A   A [/bold magenta] CCCCC  [bold magenta]K   K[/bold magenta]"
     ]
-    for line in blackjack:
-        print(line)
+
+    for line in blackjack_tulostus:
+        console.print(line)
     print('\n[bold red]Tervetuloa pelaamaan komentolinja Blackjackkia! [/bold red]')
     print('[cyan3]Valitse numeroilla pelimuoto, jota haluat pelata.[/cyan3]\n')
     print('1. [bold light_cyan1]Yksin[/bold light_cyan1]\n2. [bold light_cyan1]Kavereita vastaan[/bold light_cyan1]\n3. [bold bright_red]Lopeta peli[/bold bright_red]\n')
